@@ -4,6 +4,14 @@ All notable changes to this project are documented in this file. The format is b
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2.1] - 2026-09-02
+
+### Fixed
+
+- Package description no longer names a single assistant, matching the rest of the 0.2.0
+  move to any MCP client. Metadata is fixed per published version, so this needed a
+  release of its own.
+
 ## [0.2.0] - 2026-09-02
 
 Works with any MCP client, not just Claude.
@@ -42,5 +50,6 @@ First public release.
   by the `release` workflow.
 - Base-building ruleset and a worked example plan in `plans/`.
 
+[0.2.1]: https://github.com/MudcrabWarrior/wardogs-mcp/releases/tag/v0.2.1
 [0.2.0]: https://github.com/MudcrabWarrior/wardogs-mcp/releases/tag/v0.2.0
 [0.1.0]: https://github.com/MudcrabWarrior/wardogs-mcp/releases/tag/v0.1.0
