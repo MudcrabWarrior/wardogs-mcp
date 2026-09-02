@@ -2,19 +2,22 @@ import { chromium, type BrowserContext, type Page } from "playwright";
 import { mkdir } from "node:fs/promises";
 import { existsSync } from "node:fs";
 import { spawn } from "node:child_process";
+import { createRequire } from "node:module";
 import path from "node:path";
 import { DRAFT_KEY, SITE_URL } from "./types.js";
-import { PLANS_DIR, PROFILE_DIR, ROOT } from "./data.js";
+import { PLANS_DIR, PROFILE_DIR } from "./data.js";
 
 /**
  * Make sure Playwright's Chromium is on disk. A git checkout gets it from `npm run setup`;
  * the .mcpb bundle cannot run install steps, so the first browser_open downloads it here
  * (a few hundred MB, into Playwright's usual per-user cache, not into the bundle).
+ * The CLI is resolved through Node so it is found whether playwright is nested under
+ * this package (checkout, .mcpb) or a sibling of it (npx).
  */
 async function ensureChromium(): Promise<void> {
   const exe = chromium.executablePath();
   if (exe && existsSync(exe)) return;
-  const cli = path.join(ROOT, "node_modules", "playwright", "cli.js");
+  const cli = path.join(path.dirname(createRequire(import.meta.url).resolve("playwright/package.json")), "cli.js");
   if (!existsSync(cli)) throw new Error(`Chromium is not installed and the Playwright CLI was not found at ${cli}. Run: npx playwright install chromium`);
   await new Promise<void>((resolve, reject) => {
     const child = spawn(process.execPath, [cli, "install", "chromium"], { stdio: ["ignore", "ignore", "pipe"], windowsHide: true });
@@ -52,6 +55,8 @@ export class Builder {
     this.ctx = await chromium.launchPersistentContext(PROFILE_DIR, {
       headless: false,
       viewport: { width: 1600, height: 950 },
+      // Hides the navigator.webdriver flag so the Discord sign-in page treats the window
+      // like a normal browser. Disclosed to the site's maintainers; remove if they object.
       args: ["--disable-blink-features=AutomationControlled"],
     });
     this.ctx.on("close", () => { this.ctx = null; this.page = null; });
@@ -71,12 +76,18 @@ export class Builder {
 
   private async waitForBuilder() {
     const page = this.page!;
-    await page.waitForFunction(() => document.body.innerText.includes("MANIFEST"), null, { timeout: 30000 });
+    await page.waitForFunction(() => document.body.innerText.includes("MANIFEST"), null, { timeout: 30000 }).catch(() => {
+      throw new Error("The builder did not show its MANIFEST panel within 30 s. Is wardogs.zone reachable? Has the builder changed?");
+    });
     // the 3D scene settles a moment after the manifest renders
     await page.waitForTimeout(800);
   }
 
-  /** Write the plan into the builder's draft slot and reload so it renders. */
+  /**
+   * Write the plan into the builder's draft slot and reload so it renders. The slot is the
+   * site's own contract: localStorage[DRAFT_KEY] holding {code, saved}. If the site renames
+   * the key or changes the shape, push stops working with no error; pull returns null.
+   */
   async push(code: string): Promise<Readback> {
     const page = await this.open();
     await page.evaluate(
@@ -160,9 +171,10 @@ export class Builder {
     await page.waitForTimeout(400);
   }
 
-  /** Open a hub base in the builder and return its plan code. */
+  /** Open a hub base in the builder and return its plan code. Hub ids are 10 hex characters. */
   async hubImport(idOrUrl: string): Promise<{ id: string; code: string | null; readback: Readback }> {
-    const id = idOrUrl.match(/([0-9a-f]{10})(?:[/?#]|$)/i)?.[1] ?? idOrUrl.trim();
+    const id = idOrUrl.match(/([0-9a-f]{10})(?:[/?#]|$)/i)?.[1];
+    if (!id) throw new Error(`"${idOrUrl}" is not a hub base id or URL (expected 10 hex characters, e.g. a5f1729bb1)`);
     const page = await this.open();
     await page.goto(`${SITE_URL}?load=${id}`, { waitUntil: "domcontentloaded" });
     await this.waitForBuilder();

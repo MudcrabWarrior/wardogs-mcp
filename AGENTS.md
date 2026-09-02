@@ -2,8 +2,10 @@
 
 Baseline rules every session must apply when planning a FOB in the wardogs.zone builder
 via the wardogs MCP. These come from in-game experience and from Garen's WARDOGS base
-video (Vauban / di Giorgio principles). Where geometry forces a choice, the rule wins over
-symmetry. Ask before breaking any of these.
+video, "Build Better Bases - Star Fortress Fundamentals" by Get Gud with Garen
+(https://www.youtube.com/watch?v=M7WH9QQeHZs), which covers Vauban / di Giorgio
+principles. Where geometry forces a choice, the rule wins over
+symmetry. Ask the user before breaking any of these.
 
 ## Site limits
 - One FOB. Everything inside its 60 m square (x and z from -60 to +60). 1200 pieces max.

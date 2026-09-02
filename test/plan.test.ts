@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { Catalog, loadDataset, RULES_FILE, HOME, ROOT } from "../src/data.js";
+import { Catalog, loadDataset, assertBuildables, RULES_FILE, HOME, ROOT } from "../src/data.js";
 import { readFile } from "node:fs/promises";
 import { decodePlan, encodePlan, findSnap, rowRun, validatePlan } from "../src/plan.js";
 import { Editor } from "../src/editor.js";
@@ -98,6 +98,14 @@ test("ring gate seals the gap: both gate sockets meet wall sockets", () => {
     assert.equal(ed.floating().length, 0);
     assert.equal(validatePlan(ed.plan, cat).length, 0);
   }
+});
+
+// A reshaped site bundle must be rejected before it is cached, or every start crashes on
+// the cached copy until it ages out.
+test("a dataset the catalogue cannot index is rejected", () => {
+  assertBuildables(cat.ds.buildables);
+  const bad = [{ ...cat.get("hblock")!, name: undefined as unknown as string }];
+  assert.throws(() => assertBuildables(bad), /changed shape/);
 });
 
 // The rules tool reads this file at runtime, so a rename or a missing "files" entry in

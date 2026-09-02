@@ -55,18 +55,6 @@ export function rot2(x: number, z: number, yaw: number): [number, number] {
   return [x * c + z * s, -x * s + z * c];
 }
 
-export function dist3(a: Vec3, b: Vec3): number {
-  return Math.hypot(a[0] - b[0], a[1] - b[1], a[2] - b[2]);
-}
-
-export function add3(a: Vec3, b: Vec3): Vec3 {
-  return [a[0] + b[0], a[1] + b[1], a[2] + b[2]];
-}
-
-export function sub3(a: Vec3, b: Vec3): Vec3 {
-  return [a[0] - b[0], a[1] - b[1], a[2] - b[2]];
-}
-
 export function round2(n: number): number {
   return Math.round(n * 100) / 100;
 }

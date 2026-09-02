@@ -1,7 +1,7 @@
 {
   "name": "wardogs-mcp",
-  "version": "0.2.1",
-  "description": "MCP server that drives the wardogs.zone FOB base builder, letting an AI assistant design and render base layouts from a plain text brief.",
+  "version": "0.2.2",
+  "description": "Unofficial MCP server for the wardogs.zone base builder: an AI assistant designs and renders WARDOGS FOB layouts from a plain text brief. Built on the Wardogs Zone community hub.",
   "type": "module",
   "bin": {
     "wardogs-mcp": "dist/server.js"

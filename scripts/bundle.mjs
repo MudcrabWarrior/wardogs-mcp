@@ -1,5 +1,6 @@
-// Build release/wardogs-mcp.mcpb: a desktop-app bundle with compiled server,
-// production node_modules and the seed dataset. Run with: npm run bundle
+// Build release/wardogs-mcp.mcpb: a desktop-app bundle with the compiled server and
+// production node_modules. The piece dataset is not bundled (the site's data is not
+// redistributed); the first run fetches it. Run with: npm run bundle
 import { execSync } from "node:child_process";
 import { cpSync, mkdirSync, rmSync, writeFileSync, readFileSync, existsSync } from "node:fs";
 import path from "node:path";
@@ -15,7 +16,7 @@ run("npm run build");
 rmSync(release, { recursive: true, force: true });
 mkdirSync(stage, { recursive: true });
 
-for (const f of ["dist", "data", "plans", "package.json", "package-lock.json", "README.md", "AGENTS.md", "LICENSE"]) {
+for (const f of ["dist", "package.json", "package-lock.json", "README.md", "AGENTS.md", "LICENSE"]) {
   const src = path.join(root, f);
   if (!existsSync(src)) continue;
   cpSync(src, path.join(stage, f), {

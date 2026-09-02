@@ -1,7 +1,14 @@
 # wardogs-mcp
 
-An MCP server that lets an AI assistant build FOB layouts in the
-[wardogs.zone base builder](https://wardogs.zone/loadouts/base) from a plain text brief.
+An MCP server that lets an AI assistant design forward operating bases (FOBs) for the
+shooter WARDOGS, using the [wardogs.zone base builder](https://wardogs.zone/loadouts/base),
+from a plain text brief.
+
+The builder, its piece data and the base hub are the work of the
+[Wardogs Zone](https://wardogs.zone) team, the volunteers behind the
+[Wardogs Zone Discord](https://discord.gg/kTKpbwvF4n), who built a free, fan-made
+community hub for the game. This project exists because their builder is excellent. It is
+an independent tool, not affiliated with or endorsed by Wardogs Zone, BULKHEAD or Team17.
 
 The builder stores a base as a single text string in the browser's draft slot. This
 server does the geometry (socket pitch, stacking, rings, validation), writes that string
@@ -13,6 +20,10 @@ MCP client: Claude Code, Claude Desktop, Cursor, VS Code, Windsurf, Zed, Cline, 
 CLI, Goose and others.
 
 ## Install
+
+The first browser tool call downloads the Chromium build Playwright drives (a few hundred
+MB, once, into Playwright's per-user cache) unless it is already installed. Building and
+validating plans without the browser needs no download.
 
 ### Any MCP client, via npx
 
@@ -46,14 +57,15 @@ Some clients nest the same block under a different key (`servers` in VS Code,
 `context_servers` in Zed). The `command` and `args` are the same everywhere.
 
 Plans, screenshots, the dataset cache and the browser profile go in `wardogs-mcp` in your
-home folder. Set `WARDOGS_HOME` to move them.
+home folder. Set `WARDOGS_HOME` to move them. The first run fetches the piece dataset from
+wardogs.zone, so it needs the network once.
 
 ### Claude Desktop, one click
 
 Download `wardogs-mcp.mcpb` from the
 [latest release](https://github.com/MudcrabWarrior/wardogs-mcp/releases/latest) and
 double-click it. Claude Desktop shows an install prompt; click Install. This route needs
-no Node.js.
+no Node.js. Files go in `Documents/wardogs-mcp`.
 
 ### From source
 
@@ -61,11 +73,12 @@ no Node.js.
     cd wardogs-mcp
     npm run setup
 
-Node.js 20 or newer. `npm run setup` installs dependencies, downloads the Chromium build
-Playwright drives, fetches the piece dataset from wardogs.zone and compiles `dist/`. It
-needs the network once; the dataset is not tracked in the repo.
+Node.js 20 or newer. `npm run setup` installs dependencies, downloads Chromium, fetches
+the piece dataset from wardogs.zone and compiles `dist/`. It needs the network once; the
+dataset is not tracked in the repo.
 
-Point your client at the built server, using the real absolute path:
+Point your client at the built server, using the real absolute path
+(`/path/to/wardogs-mcp/dist/server.js` on macOS and Linux):
 
 ```json
 {
@@ -79,7 +92,9 @@ Point your client at the built server, using the real absolute path:
 ```
 
 Claude Code needs no config from source: `.mcp.json` in the folder registers the server
-when Claude Code runs from there. Full steps are in [SETUP.md](SETUP.md).
+when Claude Code runs from there. Full steps are in [SETUP.md](SETUP.md). A checkout keeps
+plans, screenshots and the browser profile in the package folder, and `plans/` holds a
+worked example, loaded with `plan_load vauban-mega-v1`.
 
 ## Usage
 
@@ -97,13 +112,8 @@ is +z, east is +x and west is -x. Every piece must sit inside a FOB's 60 m squar
 Good bases need more than geometry: vault heights, standoff distances, where bastions go,
 which builder quirks to work around. That ruleset is served over the protocol by the
 `rules` tool, so every client gets it without any per-client setup. Assistants are told to
-call `rules` before planning a base; if yours does not, ask it to.
-
-The same text is also exposed as the resource `wardogs://rules` for clients that support
-resources, and lives in [AGENTS.md](AGENTS.md) for clients that read a rules file from the
-project folder.
-
-`plans/` holds a worked example, loaded with `plan_load vauban-mega-v1`.
+call `rules` before planning a base; if yours does not, ask it to. The same text is also
+exposed as the resource `wardogs://rules`, and the source file is [AGENTS.md](AGENTS.md).
 
 ### Hub sign-in and publishing
 
@@ -129,26 +139,14 @@ Building and screenshotting bases do not require sign-in.
 
 ## Development
 
-    npm run dev        run from source with tsx
-    npm test           unit tests for the codec and geometry
-    npm run extract    fetch data/buildables.json from the site
-    npm run build      compile to dist/
-    npm run bundle     build the .mcpb
-
-Layout:
-
-    src/data.ts     extract and cache the piece dataset
+    src/data.ts     fetch and cache the piece dataset
     src/plan.ts     codec, snapping, stats, validation (ports of the site's functions)
     src/editor.ts   working plan, wall runs, rings, stacking, undo
     src/browser.ts  Playwright control of the builder
     src/server.ts   MCP tools
     scripts/        dataset extract and .mcpb bundle build
-    plans/          saved plans and screenshots
 
-Set `WARDOGS_HOME` to move the writable folders (dataset cache, plans, `.profile`). A git
-checkout keeps them in the package folder; an installed copy uses your home folder.
-
-See [CONTRIBUTING.md](CONTRIBUTING.md) for the pull request process.
+Scripts, tests and the pull request process are in [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ## Known limits
 
@@ -162,9 +160,24 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for the pull request process.
   and trust the builder's own status line after `browser_push`.
 - Plans loaded through the draft slot skip the site's placement checks, so an invalid
   plan still renders. `plan_status` is the guard.
-- Which compass direction is "up" on the builder's screen has not been confirmed. Take a
-  screenshot after the first push and adjust yaw if the layout is mirrored.
+- Take a screenshot after the first push and mirror yaw if the layout comes out the
+  wrong way round.
+
+## Credits
+
+- **Wardogs Zone** built and runs the base builder, the piece dataset and the hub this
+  server drives. https://wardogs.zone, Discord https://discord.gg/kTKpbwvF4n
+- The base-building rules in `AGENTS.md` draw on
+  [WARDOGS: Build Better Bases - Star Fortress Fundamentals](https://www.youtube.com/watch?v=M7WH9QQeHZs)
+  by [Get Gud with Garen](https://www.youtube.com/@GetGudGaren).
+- WARDOGS is by BULKHEAD, published by Team17.
+
+What this server takes from the site: it reads the piece dataset out of the builder's own
+script bundle (the page and its script chunks, about 2.4 MB, normally once a week, cached
+locally and never redistributed) and drives the builder in a local Chromium window under
+your own Discord sign-in. Publishing to the hub is always a button you click yourself.
 
 ## Licence
 
-MIT. See [LICENSE](LICENSE).
+MIT. See [LICENSE](LICENSE). The licence covers this repository's code only, not the
+site's data or the builder it drives.

@@ -3,11 +3,16 @@ import { existsSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { homedir } from "node:os";
+import { createRequire } from "node:module";
 import type { Buildable, Dataset, Box, Vec3, Snap } from "./types.js";
 import { SITE_URL } from "./types.js";
 
-/** Package root: where the code and the seed dataset live (read-only when installed as a bundle). */
+/** Package root: where the code and the ruleset live (read-only when installed as a bundle). */
 export const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
+// One source of truth for the version. dist/ sits one level under the package root in a
+// checkout, an npm install and the .mcpb alike, so this resolves in all three.
+export const { version } = createRequire(import.meta.url)("../package.json") as { version: string };
+export const REPO_URL = "https://github.com/MudcrabWarrior/wardogs-mcp";
 /**
  * Writable home for plans, screenshots, the browser profile and the dataset cache.
  * A git checkout keeps them in the package folder. An installed copy (npm, npx) must not
@@ -25,8 +30,6 @@ export const DATA_DIR = path.join(HOME, "data");
 export const PLANS_DIR = path.join(HOME, "plans");
 export const PROFILE_DIR = path.join(HOME, ".profile");
 const CACHE = path.join(DATA_DIR, "buildables.json");
-/** Dataset shipped with the package, used when there is no cache and no network. */
-const SEED = path.join(ROOT, "data", "buildables.json");
 /** Base-building ruleset, served to any MCP client by the rules tool and resource. */
 export const RULES_FILE = path.join(ROOT, "AGENTS.md");
 const MAX_AGE_MS = 7 * 24 * 3600 * 1000;
@@ -41,7 +44,7 @@ function unescapeBlob(s: string): string {
 }
 
 async function getText(url: string): Promise<string> {
-  const res = await fetch(url, { headers: { "user-agent": "wardogs-mcp/0.1 (personal FOB planning tool)" } });
+  const res = await fetch(url, { headers: { "user-agent": `wardogs-mcp/${version} (FOB planning tool; +${REPO_URL})` } });
   if (!res.ok) throw new Error(`GET ${url} -> ${res.status}`);
   return res.text();
 }
@@ -124,9 +127,21 @@ export async function extractFromSite(): Promise<Dataset> {
         world: s.world,
       });
     }
+    assertBuildables(buildables);
     return { fetchedAt: new Date().toISOString(), source: url, fobRangeM: B.fobRangeM ?? 60, buildables };
   }
   throw new Error("Could not find the buildables blob in any wardogs.zone chunk. The site may have changed.");
+}
+
+/**
+ * Reject a dataset the Catalog cannot index. This runs before the cache is written, so a
+ * reshaped site bundle falls back to the previous copy instead of being cached and
+ * crashing every start for a week.
+ */
+export function assertBuildables(list: Buildable[]): void {
+  for (const b of list)
+    for (const k of ["id", "name", "label"] as const)
+      if (typeof b[k] !== "string") throw new Error(`Site dataset changed shape: a buildable (${JSON.stringify(b.id)}) has no ${k}`);
 }
 
 let cached: Dataset | null = null;
@@ -147,12 +162,11 @@ export async function loadDataset(opts: { refresh?: boolean } = {}): Promise<Dat
     cached = ds;
     return ds;
   } catch (err) {
-    // Stale cache beats no data, and the seed shipped with the package beats nothing.
-    for (const file of [CACHE, SEED]) {
-      if (existsSync(file)) {
-        cached = JSON.parse(await readFile(file, "utf8")) as Dataset;
-        return cached;
-      }
+    // Stale cache beats no data. Say so on stderr, which MCP clients log.
+    if (existsSync(CACHE)) {
+      cached = JSON.parse(await readFile(CACHE, "utf8")) as Dataset;
+      console.error(`wardogs-mcp: could not fetch the piece dataset (${(err as Error).message}); using the cached copy from ${cached.fetchedAt}`);
+      return cached;
     }
     throw err;
   }

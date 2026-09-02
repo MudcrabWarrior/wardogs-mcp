@@ -4,22 +4,20 @@ import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js"
 import { z } from "zod";
 import { readFile, writeFile, mkdir, readdir } from "node:fs/promises";
 import path from "node:path";
-import { Catalog, loadDataset, PLANS_DIR, RULES_FILE } from "./data.js";
+import { Catalog, loadDataset, PLANS_DIR, RULES_FILE, version } from "./data.js";
 import { Editor } from "./editor.js";
 import { Builder } from "./browser.js";
 import { deg, snapKind, yawFromQuat } from "./math.js";
-import { createRequire } from "node:module";
-
-// One source of truth for the version. dist/server.js sits one level under the package
-// root in a checkout, an npm install and the .mcpb alike, so this resolves in all three.
-const { version } = createRequire(import.meta.url)("../package.json") as { version: string };
 
 const text = (s: string) => ({ content: [{ type: "text" as const, text: s }] });
 const json = (o: unknown) => text(JSON.stringify(o, null, 2));
 const slug = (s: string) => s.trim().replace(/[^a-z0-9_-]+/gi, "-").replace(/^-|-$/g, "").toLowerCase() || "plan";
 
 async function main() {
-  const cat = new Catalog(await loadDataset());
+  const ds = await loadDataset().catch((err) => {
+    throw new Error(`Could not load the piece dataset (${err.message}). The first run needs network access to wardogs.zone.`);
+  });
+  const cat = new Catalog(ds);
   const ed = new Editor(cat);
   const browser = new Builder();
 
@@ -121,7 +119,7 @@ async function main() {
     return text(ed.summary());
   });
 
-  server.registerTool("plan_save", { description: "Save the current plan to plans/<name>.json in the project folder.", inputSchema: { name: z.string(), notes: z.string().optional() } }, async ({ name, notes }) => {
+  server.registerTool("plan_save", { description: "Save the current plan to plans/<name>.json in the writable home folder. Overwrites an existing plan of the same name.", inputSchema: { name: z.string(), notes: z.string().optional() } }, async ({ name, notes }) => {
     await mkdir(PLANS_DIR, { recursive: true });
     const file = path.join(PLANS_DIR, `${slug(name)}.json`);
     await writeFile(file, JSON.stringify({ name, notes: notes ?? "", savedAt: new Date().toISOString(), code: ed.code(), stats: ed.stats() }, null, 2));
@@ -130,7 +128,14 @@ async function main() {
 
   server.registerTool("plan_load", { description: "Load a plan saved with plan_save.", inputSchema: { name: z.string() } }, async ({ name }) => {
     const file = path.join(PLANS_DIR, `${slug(name)}.json`);
-    const j = JSON.parse(await readFile(file, "utf8"));
+    let j: { name?: string; notes?: string; code?: unknown };
+    try {
+      j = JSON.parse(await readFile(file, "utf8"));
+    } catch (err: any) {
+      if (err?.code === "ENOENT") return text(`No saved plan "${name}". plan_list shows what exists.`);
+      return text(`Plan file ${path.basename(file)} is not valid JSON: ${err?.message}`);
+    }
+    if (typeof j?.code !== "string") return text(`Plan file ${path.basename(file)} has no plan code in it.`);
     ed.loadCode(j.code);
     return text(`Loaded ${j.name}${j.notes ? ` (${j.notes})` : ""}\n${ed.summary()}`);
   });
@@ -207,7 +212,7 @@ async function main() {
 
   // ----- browser -----
 
-  server.registerTool("browser_open", { description: "Open (or focus) the builder in the MCP's own Chromium window. Sign in to Discord there once if you want hub_save." }, async () => {
+  server.registerTool("browser_open", { description: "Open (or focus) the builder in the MCP's own Chromium window. The first browser use downloads Chromium (a few hundred MB) if Playwright has not installed it yet. Sign in to Discord there once if you want hub_save." }, async () => {
     await browser.open();
     return json(await browser.readback());
   });

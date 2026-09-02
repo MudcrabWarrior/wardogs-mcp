@@ -81,8 +81,7 @@ confirm a Chromium window with the base builder appears.
 The base-building rules (site limits, player movement facts, Vauban-style fortification
 principles, builder quirks) are served by the `rules` tool, so no per-client setup is
 needed. Ask the assistant to call `rules` before it plans a base. The same text is exposed
-as the resource `wardogs://rules` and kept in `AGENTS.md` for clients that read a rules
-file from the project folder.
+as the resource `wardogs://rules`; the source file is `AGENTS.md` in this folder.
 
 ## Troubleshooting
 
