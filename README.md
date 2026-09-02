@@ -171,8 +171,11 @@ Scripts, tests and the pull request process are in [CONTRIBUTING.md](CONTRIBUTIN
 
 wardogs.zone does not support this tool; its maintainers have kindly allowed it, and
 that is all. Problems with wardogs-mcp go to the
-[issue tracker](https://github.com/MudcrabWarrior/wardogs-mcp/issues) here, not to the
-site. Problems with the builder itself are theirs, and their Discord is the place.
+[issue tracker](https://github.com/MudcrabWarrior/wardogs-mcp/issues) here or to the
+[wardogs-mcp thread](https://discord.com/channels/1537798951959535626/1544672173979992104)
+in the field-manual forum of the [Wardogs Zone Discord](https://discord.gg/kTKpbwvF4n)
+(join the server first, or the link will not open). Problems with the builder itself are
+theirs, and their normal channels apply.
 
 ## Credits
 

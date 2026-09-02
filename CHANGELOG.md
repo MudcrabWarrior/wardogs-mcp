@@ -4,14 +4,15 @@ All notable changes to this project are documented in this file. The format is b
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [0.2.3] - 2026-09-02
 
 ### Changed
 
 - Chromium no longer launches with the automation-hiding flag. The Wardogs Zone team
   allowed this tool on condition that it never works around their captcha; hiding
-  `navigator.webdriver` would. README states that and the no-automatic-hub-save rule,
-  and adds a Support section: the site does not support this tool, this repo does.
+  `navigator.webdriver` would. README states that and the no-automatic-hub-save rule.
+- README Support section: the site does not support this tool; the issue tracker and
+  the wardogs-mcp thread in the Wardogs Zone Discord do.
 
 ## [0.2.2] - 2026-09-02
 
@@ -88,6 +89,7 @@ First release.
   by the `release` workflow.
 - Base-building ruleset and a worked example plan in `plans/`.
 
+[0.2.3]: https://github.com/MudcrabWarrior/wardogs-mcp/releases/tag/v0.2.3
 [0.2.2]: https://github.com/MudcrabWarrior/wardogs-mcp/releases/tag/v0.2.2
 [0.2.1]: https://github.com/MudcrabWarrior/wardogs-mcp/releases/tag/v0.2.1
 [0.2.0]: https://github.com/MudcrabWarrior/wardogs-mcp/releases/tag/v0.2.0
