@@ -1,0 +1,43 @@
+{
+  "name": "wardogs-mcp",
+  "version": "0.1.0",
+  "description": "MCP server that drives the wardogs.zone FOB base builder, letting Claude design and render base layouts from a plain text brief.",
+  "type": "module",
+  "bin": {
+    "wardogs-mcp": "dist/server.js"
+  },
+  "scripts": {
+    "setup": "npm install && playwright install chromium && npm run extract && npm run build",
+    "build": "tsc -p tsconfig.json",
+    "start": "node dist/server.js",
+    "dev": "tsx src/server.ts",
+    "extract": "tsx scripts/extract.ts",
+    "test": "tsx --test test/*.test.ts",
+    "browsers": "playwright install chromium",
+    "bundle": "node scripts/bundle.mjs"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.30.0",
+    "playwright": "^1.62.1",
+    "zod": "^4.5.4"
+  },
+  "devDependencies": {
+    "@anthropic-ai/mcpb": "^2.1.2",
+    "@types/node": "^22.0.0",
+    "tsx": "^4.23.13",
+    "typescript": "^5.6.0"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/MudcrabWarrior/wardogs-mcp.git"
+  },
+  "author": "MudcrabWarrior",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/MudcrabWarrior/wardogs-mcp/issues"
+  },
+  "homepage": "https://github.com/MudcrabWarrior/wardogs-mcp#readme"
+}

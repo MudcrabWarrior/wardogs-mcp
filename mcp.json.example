@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "wardogs": {
+      "command": "node",
+      "args": ["<FULL PATH TO THIS FOLDER>\\dist\\server.js"]
+    }
+  }
+}
