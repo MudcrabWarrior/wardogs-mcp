@@ -125,6 +125,10 @@ exposed as the resource `wardogs://rules`, and the source file is [AGENTS.md](AG
 Nothing types credentials on your behalf, and nothing outside `.profile` stores them.
 Building and screenshotting bases do not require sign-in.
 
+Two things this tool will never do, by agreement with the Wardogs Zone team: it does not
+complete or work around the captcha, and it does not save to the hub by itself. The Save
+click is always yours.
+
 ## Tools
 
 - **Rules**: `rules`
@@ -163,10 +167,18 @@ Scripts, tests and the pull request process are in [CONTRIBUTING.md](CONTRIBUTIN
 - Take a screenshot after the first push and mirror yaw if the layout comes out the
   wrong way round.
 
+## Support
+
+wardogs.zone does not support this tool; its maintainers have kindly allowed it, and
+that is all. Problems with wardogs-mcp go to the
+[issue tracker](https://github.com/MudcrabWarrior/wardogs-mcp/issues) here, not to the
+site. Problems with the builder itself are theirs, and their Discord is the place.
+
 ## Credits
 
 - **Wardogs Zone** built and runs the base builder, the piece dataset and the hub this
-  server drives. https://wardogs.zone, Discord https://discord.gg/kTKpbwvF4n
+  server drives, and gave this project their blessing. https://wardogs.zone, Discord
+  https://discord.gg/kTKpbwvF4n
 - The base-building rules in `AGENTS.md` draw on
   [WARDOGS: Build Better Bases - Star Fortress Fundamentals](https://www.youtube.com/watch?v=M7WH9QQeHZs)
   by [Get Gud with Garen](https://www.youtube.com/@GetGudGaren).

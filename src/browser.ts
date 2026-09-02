@@ -55,9 +55,8 @@ export class Builder {
     this.ctx = await chromium.launchPersistentContext(PROFILE_DIR, {
       headless: false,
       viewport: { width: 1600, height: 950 },
-      // Hides the navigator.webdriver flag so the Discord sign-in page treats the window
-      // like a normal browser. Disclosed to the site's maintainers; remove if they object.
-      args: ["--disable-blink-features=AutomationControlled"],
+      // No automation-hiding flags: the site's maintainers allow this tool on condition
+      // that it never works around their captcha, and hiding navigator.webdriver would.
     });
     this.ctx.on("close", () => { this.ctx = null; this.page = null; });
     this.page = this.ctx.pages()[0] ?? (await this.ctx.newPage());
@@ -183,7 +182,11 @@ export class Builder {
     return { id, code: readback.draftCode, readback };
   }
 
-  /** Open the site's save dialog with name and notes filled. The user clicks Save. */
+  /**
+   * Open the site's save dialog with name and notes filled. The user clicks Save.
+   * This is deliberate and is a condition of the site's maintainers: the tool never
+   * completes the captcha and never submits a save to the hub itself. Keep it that way.
+   */
   async openSaveDialog(name: string, notes = ""): Promise<string> {
     const page = await this.open();
     const btn = page.getByRole("button", { name: /save this base to the hub/i });
