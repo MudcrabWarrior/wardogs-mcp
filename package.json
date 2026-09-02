@@ -1,6 +1,6 @@
 {
   "name": "wardogs-mcp",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "MCP server that drives the wardogs.zone FOB base builder, letting Claude design and render base layouts from a plain text brief.",
   "type": "module",
   "bin": {
@@ -14,7 +14,8 @@
     "extract": "tsx scripts/extract.ts",
     "test": "tsx --test test/*.test.ts",
     "browsers": "playwright install chromium",
-    "bundle": "node scripts/bundle.mjs"
+    "bundle": "node scripts/bundle.mjs",
+    "prepare": "npm run build"
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.30.0",
@@ -39,5 +40,18 @@
   "bugs": {
     "url": "https://github.com/MudcrabWarrior/wardogs-mcp/issues"
   },
-  "homepage": "https://github.com/MudcrabWarrior/wardogs-mcp#readme"
+  "homepage": "https://github.com/MudcrabWarrior/wardogs-mcp#readme",
+  "files": [
+    "dist/",
+    "AGENTS.md",
+    "README.md",
+    "LICENSE"
+  ],
+  "keywords": [
+    "mcp",
+    "model-context-protocol",
+    "wardogs",
+    "base-builder",
+    "playwright"
+  ]
 }

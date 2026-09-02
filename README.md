@@ -1,6 +1,6 @@
 # wardogs-mcp
 
-An MCP server that lets Claude build FOB layouts in the
+An MCP server that lets an AI assistant build FOB layouts in the
 [wardogs.zone base builder](https://wardogs.zone/loadouts/base) from a plain text brief.
 
 The builder stores a base as a single text string in the browser's draft slot. This
@@ -8,53 +8,78 @@ server does the geometry (socket pitch, stacking, rings, validation), writes tha
 into its own Chromium window and reloads the builder so it renders. Other players' hub
 bases load the same way and can be edited.
 
+It speaks plain [MCP](https://modelcontextprotocol.io) over stdio, so it works with any
+MCP client: Claude Code, Claude Desktop, Cursor, VS Code, Windsurf, Zed, Cline, Gemini
+CLI, Goose and others.
+
 ## Install
 
-There are two routes. Both come from this repo, and both can be installed on one machine.
+### Any MCP client, via npx
 
-### A. Claude Desktop only, without Node or git
+No clone and no build. Add this to your client's MCP config:
 
-1. Download `wardogs-mcp.mcpb` from the
-   [latest release](https://github.com/MudcrabWarrior/wardogs-mcp/releases/latest).
-2. Double-click the file. Claude Desktop shows an install prompt; click Install.
-3. Download [CLAUDE.md](CLAUDE.md) as well and paste it into a Claude project's
-   instructions so Desktop has the base-building rules.
+```json
+{
+  "mcpServers": {
+    "wardogs": {
+      "command": "npx",
+      "args": ["-y", "wardogs-mcp"]
+    }
+  }
+}
+```
 
-The bundle keeps its plans, screenshots and browser profile in `Documents\wardogs-mcp`,
-and downloads Chromium on the first `browser_open` (a few hundred MB, once).
+Where that config lives depends on the client:
 
-### B. Claude Code, or Claude Desktop from the same folder
+| Client | Config file |
+| --- | --- |
+| Claude Code | `.mcp.json` in the project folder, or `claude mcp add` |
+| Claude Desktop | Settings > Developer > Edit Config |
+| Cursor | `.cursor/mcp.json` |
+| VS Code | `.vscode/mcp.json` |
+| Windsurf | `~/.codeium/windsurf/mcp_config.json` |
+| Zed | `settings.json`, under `context_servers` |
+| Cline | `cline_mcp_settings.json` |
+| Gemini CLI | `~/.gemini/settings.json` |
 
-Paste this into Claude Code:
+Some clients nest the same block under a different key (`servers` in VS Code,
+`context_servers` in Zed). The `command` and `args` are the same everywhere.
 
-    Set up https://github.com/MudcrabWarrior/wardogs-mcp for me. Follow SETUP.md.
+Plans, screenshots, the dataset cache and the browser profile go in `wardogs-mcp` in your
+home folder. Set `WARDOGS_HOME` to move them.
 
-Claude clones the repo, runs `npm run setup`, registers the server for Claude Code and
-Claude Desktop, and walks through the one-time Discord sign-in. Node.js 20 or newer and
-git are required. Full steps are in [SETUP.md](SETUP.md).
+### Claude Desktop, one click
 
-Manually:
+Download `wardogs-mcp.mcpb` from the
+[latest release](https://github.com/MudcrabWarrior/wardogs-mcp/releases/latest) and
+double-click it. Claude Desktop shows an install prompt; click Install. This route needs
+no Node.js.
+
+### From source
 
     git clone https://github.com/MudcrabWarrior/wardogs-mcp.git
     cd wardogs-mcp
     npm run setup
 
-`npm run setup` also fetches the piece dataset from wardogs.zone, so it needs the network
-once. The dataset is not tracked in the repo.
+Node.js 20 or newer. `npm run setup` installs dependencies, downloads the Chromium build
+Playwright drives, fetches the piece dataset from wardogs.zone and compiles `dist/`. It
+needs the network once; the dataset is not tracked in the repo.
 
-For Claude Code that is all: `.mcp.json` registers the server whenever Claude Code runs
-from this folder. For Claude Desktop, open Settings > Developer > Edit Config, add the
-entry below inside `"mcpServers"` using the real absolute path of the folder, then fully
-quit and restart Desktop:
+Point your client at the built server, using the real absolute path:
 
+```json
+{
+  "mcpServers": {
     "wardogs": {
       "command": "node",
       "args": ["C:\\path\\to\\wardogs-mcp\\dist\\server.js"]
     }
+  }
+}
+```
 
-Installing both routes makes Desktop list two wardogs servers. Disable one under
-Settings > Extensions or remove the config entry; keeping both is harmless, but Claude
-receives duplicate tools.
+Claude Code needs no config from source: `.mcp.json` in the folder registers the server
+when Claude Code runs from there. Full steps are in [SETUP.md](SETUP.md).
 
 ## Usage
 
@@ -67,15 +92,24 @@ Describe the base you want:
 Units are metres on the flat pad, and yaw is in degrees. In `ring()`, north is -z, south
 is +z, east is +x and west is -x. Every piece must sit inside a FOB's 60 m square.
 
-[CLAUDE.md](CLAUDE.md) holds the standing base-building rules that Claude applies to
-every plan: site limits, player movement facts, fortification principles and builder
-quirks. `plans/` holds a worked example, loaded with `plan_load vauban-mega-v1`.
+### The ruleset
+
+Good bases need more than geometry: vault heights, standoff distances, where bastions go,
+which builder quirks to work around. That ruleset is served over the protocol by the
+`rules` tool, so every client gets it without any per-client setup. Assistants are told to
+call `rules` before planning a base; if yours does not, ask it to.
+
+The same text is also exposed as the resource `wardogs://rules` for clients that support
+resources, and lives in [AGENTS.md](AGENTS.md) for clients that read a rules file from the
+project folder.
+
+`plans/` holds a worked example, loaded with `plan_load vauban-mega-v1`.
 
 ### Hub sign-in and publishing
 
-1. Ask Claude to run `browser_open`.
+1. Ask for `browser_open`.
 2. In the Chromium window that appears, click Sign in (Discord) and complete it yourself.
-3. The session is kept in `.profile` (or `Documents\wardogs-mcp\.profile` for the bundle).
+3. The session is kept in `.profile` inside the writable home folder.
 4. `hub_save` fills the save dialog. You complete any captcha and click Save.
 
 Nothing types credentials on your behalf, and nothing outside `.profile` stores them.
@@ -83,6 +117,7 @@ Building and screenshotting bases do not require sign-in.
 
 ## Tools
 
+- **Rules**: `rules`
 - **Plan**: `plan_new`, `plan_status`, `plan_pieces`, `plan_code`, `plan_load_code`,
   `plan_save`, `plan_load`, `plan_list`, `undo`, `redo`
 - **Edit**: `place_fob`, `place`, `wall_run`, `ring`, `stack`, `move`, `set_pose`,
@@ -110,13 +145,16 @@ Layout:
     scripts/        dataset extract and .mcpb bundle build
     plans/          saved plans and screenshots
 
-Set `WARDOGS_HOME` to move the writable folders (dataset cache, plans, `.profile`) out of
-the package folder. The bundle sets it automatically.
+Set `WARDOGS_HOME` to move the writable folders (dataset cache, plans, `.profile`). A git
+checkout keeps them in the package folder; an installed copy uses your home folder.
 
 See [CONTRIBUTING.md](CONTRIBUTING.md) for the pull request process.
 
 ## Known limits
 
+- **Local clients only.** The server drives a real Chromium on your machine and keeps a
+  browser profile on disk. Hosted and remote setups (web chat connectors, server-side MCP)
+  cannot run it.
 - Open pad only. Map sites (Kavkazi, Europe, North America) need terrain heights and are
   not wired up yet.
 - Overlap checks use whole-piece boxes, while the site checks per mesh. A mortar inside a

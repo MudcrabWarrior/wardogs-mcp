@@ -1,4 +1,4 @@
-// Build release/wardogs-mcp.mcpb: a Claude Desktop bundle with compiled server,
+// Build release/wardogs-mcp.mcpb: a desktop-app bundle with compiled server,
 // production node_modules and the seed dataset. Run with: npm run bundle
 import { execSync } from "node:child_process";
 import { cpSync, mkdirSync, rmSync, writeFileSync, readFileSync, existsSync } from "node:fs";
@@ -15,7 +15,7 @@ run("npm run build");
 rmSync(release, { recursive: true, force: true });
 mkdirSync(stage, { recursive: true });
 
-for (const f of ["dist", "data", "plans", "package.json", "package-lock.json", "README.md", "CLAUDE.md", "LICENSE"]) {
+for (const f of ["dist", "data", "plans", "package.json", "package-lock.json", "README.md", "AGENTS.md", "LICENSE"]) {
   const src = path.join(root, f);
   if (!existsSync(src)) continue;
   cpSync(src, path.join(stage, f), {
@@ -31,7 +31,7 @@ const manifest = {
   name: "wardogs-mcp",
   display_name: "WARDOGS base builder",
   version: pkg.version,
-  description: "Lets Claude build FOB layouts in the wardogs.zone base builder from a text brief.",
+  description: "Lets an AI assistant build FOB layouts in the wardogs.zone base builder from a text brief.",
   long_description: readFileSync(path.join(root, "README.md"), "utf8").split("\n## Tools")[0],
   author: { name: "MudcrabWarrior" },
   repository: { type: "git", url: "https://github.com/MudcrabWarrior/wardogs-mcp" },

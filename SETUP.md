@@ -1,9 +1,15 @@
-# Setup instructions (for Claude)
+# Setup instructions (for your AI assistant)
 
-There are two install routes. This file covers the git route (Claude Code, and Claude
-Desktop pointed at the same folder). If the user only has Claude Desktop and does not
-want Node installed, skip all of this: have them download `wardogs-mcp.mcpb` from
-https://github.com/MudcrabWarrior/wardogs-mcp/releases/latest and double-click it. Both routes can coexist on one PC.
+This file covers installing from a git checkout. Two shorter routes exist and may suit
+the user better:
+
+- Any MCP client, no clone: put `npx -y wardogs-mcp` in the client's MCP config. See the
+  README for the config file each client uses.
+- Claude Desktop, no Node.js: download `wardogs-mcp.mcpb` from
+  https://github.com/MudcrabWarrior/wardogs-mcp/releases/latest and double-click it.
+
+Use the steps below when the user wants the source, for development, or to run an
+unreleased version. The routes can coexist on one machine.
 
 If a person has pasted this repo link and asked you to "set this up", follow these steps
 in order. Do not skip the verification at the end. Windows is the expected platform; the
@@ -37,8 +43,12 @@ Claude Code: nothing to do. `.mcp.json` in this folder registers the server when
 Claude Code is started from inside the folder. Tell the user to run `claude` from this
 folder (or add the folder to their Claude Code project list).
 
-Claude Desktop: open the config file and add the entry below inside `"mcpServers"`,
-replacing the path with the real absolute path of this folder. Escape backslashes.
+Any other MCP client (Claude Desktop, Cursor, VS Code, Windsurf, Zed, Cline, Gemini CLI):
+add the entry below inside `"mcpServers"` in that client's config file, replacing the path
+with the real absolute path of this folder. Escape backslashes. The README lists where
+each client keeps its config.
+
+Claude Desktop keeps its config at:
 
 - Windows: `%APPDATA%\Claude\claude_desktop_config.json`
 - macOS: `~/Library/Application Support/Claude/claude_desktop_config.json`
@@ -68,10 +78,11 @@ confirm a Chromium window with the base builder appears.
 
 ## Standing rules
 
-`CLAUDE.md` in this folder holds the base-building rules (site limits, player movement
-facts, Vauban-style fortification principles, builder quirks). Claude Code reads it
-automatically. In Claude Desktop, paste it into a project's instructions or attach it to
-the conversation before asking for a base.
+The base-building rules (site limits, player movement facts, Vauban-style fortification
+principles, builder quirks) are served by the `rules` tool, so no per-client setup is
+needed. Ask the assistant to call `rules` before it plans a base. The same text is exposed
+as the resource `wardogs://rules` and kept in `AGENTS.md` for clients that read a rules
+file from the project folder.
 
 ## Troubleshooting
 

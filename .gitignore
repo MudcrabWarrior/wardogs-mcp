@@ -5,3 +5,4 @@ plans/*.png
 release/
 *.mcpb
 data/
+*.tgz

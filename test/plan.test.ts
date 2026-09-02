@@ -1,6 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { Catalog, loadDataset } from "../src/data.js";
+import { Catalog, loadDataset, RULES_FILE, HOME, ROOT } from "../src/data.js";
+import { readFile } from "node:fs/promises";
 import { decodePlan, encodePlan, findSnap, rowRun, validatePlan } from "../src/plan.js";
 import { Editor } from "../src/editor.js";
 import { snapKind, yawFromQuat } from "../src/math.js";
@@ -97,4 +98,21 @@ test("ring gate seals the gap: both gate sockets meet wall sockets", () => {
     assert.equal(ed.floating().length, 0);
     assert.equal(validatePlan(ed.plan, cat).length, 0);
   }
+});
+
+// The rules tool reads this file at runtime, so a rename or a missing "files" entry in
+// package.json breaks every client silently. Pin the path and the headings it serves.
+test("rules file is readable and has the sections the tool promises", async () => {
+  const md = await readFile(RULES_FILE, "utf8");
+  assert.match(md, /^# WARDOGS base building rules/);
+  for (const heading of ["## Site limits", "## Player movement", "## Fortification principles", "## Walls and layers", "## Emplacements", "## Builder quirks"]) {
+    assert.ok(md.includes(heading), `rules missing ${heading}`);
+  }
+});
+
+// A git checkout writes plans beside the source; an installed copy must not write inside
+// node_modules, which npx throws away between runs.
+test("writable home stays out of node_modules", () => {
+  assert.ok(!HOME.includes("node_modules"), HOME);
+  assert.equal(HOME, ROOT); // this test always runs from a checkout
 });

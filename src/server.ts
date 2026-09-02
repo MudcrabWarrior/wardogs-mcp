@@ -4,10 +4,15 @@ import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js"
 import { z } from "zod";
 import { readFile, writeFile, mkdir, readdir } from "node:fs/promises";
 import path from "node:path";
-import { Catalog, loadDataset, PLANS_DIR } from "./data.js";
+import { Catalog, loadDataset, PLANS_DIR, RULES_FILE } from "./data.js";
 import { Editor } from "./editor.js";
 import { Builder } from "./browser.js";
 import { deg, snapKind, yawFromQuat } from "./math.js";
+import { createRequire } from "node:module";
+
+// One source of truth for the version. dist/server.js sits one level under the package
+// root in a checkout, an npm install and the .mcpb alike, so this resolves in all three.
+const { version } = createRequire(import.meta.url)("../package.json") as { version: string };
 
 const text = (s: string) => ({ content: [{ type: "text" as const, text: s }] });
 const json = (o: unknown) => text(JSON.stringify(o, null, 2));
@@ -19,7 +24,7 @@ async function main() {
   const browser = new Builder();
 
   const server = new McpServer(
-    { name: "wardogs-mcp", version: "0.1.0" },
+    { name: "wardogs-mcp", version },
     {
       instructions: [
         "Drives the wardogs.zone FOB base builder. Units are metres on a flat pad, y up. Yaw is degrees.",
@@ -28,8 +33,29 @@ async function main() {
         "Every piece must sit inside a FOB's 60 m square (120 m across).",
         "Snapping is always on: place() lands on the nearest socket, wall_run and ring use socket pitch, plan_status lists any wall piece not joined to a neighbour. Only pass snap=false for deliberately free-standing pieces (mortars, vehicles, tents).",
         "Publishing goes through hub_save which opens the site's own dialog; the user clicks Save.",
+        "Call the rules tool before planning a base. It returns the standing base-building ruleset (site limits, player movement facts, fortification principles, builder quirks) that every plan is expected to follow.",
       ].join("\n"),
     },
+  );
+
+  // ----- ruleset -----
+
+  // Served over the protocol rather than left as a file for the client to find, so every
+  // MCP client gets the same rules. Tools are the one capability every client supports;
+  // the resource is a convenience for those that also support resources.
+  const rules = () => readFile(RULES_FILE, "utf8");
+
+  server.registerTool(
+    "rules",
+    { description: "The standing WARDOGS base-building ruleset: site limits, player movement facts, firing positions, fortification principles, walls and layers, gates, emplacements and builder quirks. Read this before planning a base.", inputSchema: {} },
+    async () => text(await rules()),
+  );
+
+  server.registerResource(
+    "rules",
+    "wardogs://rules",
+    { description: "The standing WARDOGS base-building ruleset.", mimeType: "text/markdown" },
+    async (uri) => ({ contents: [{ uri: uri.href, mimeType: "text/markdown", text: await rules() }] }),
   );
 
   // ----- catalogue -----
